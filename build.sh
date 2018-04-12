@@ -12,6 +12,8 @@ mkdir Rlibrary
 
 Rscript -e 'install.packages("optparse", lib="Rlibrary", repos="https://cran.rstudio.com/", dependencies=TRUE)'
 
+Rscript -e 'install.packages("dplyr", lib="Rlibrary", repos="https://cran.rstudio.com/", dependencies=TRUE)'
+
 Rscript -e 'install.packages("truncnorm", lib="Rlibrary", repos="https://cran.rstudio.com/", dependencies=TRUE)'
 
 Rscript -e 'install.packages("Rmpi", lib="Rlibrary", repos="https://cran.rstudio.com/", dependencies=TRUE, configure.args=c(Rmpi="--with-mpi=/exports/applications/apps/SL7/openmpi/1.10.1"))'
@@ -19,6 +21,16 @@ Rscript -e 'install.packages("Rmpi", lib="Rlibrary", repos="https://cran.rstudio
 Rscript -e 'install.packages("doMPI", lib="Rlibrary", repos="https://cran.rstudio.com/", dependencies=TRUE)'
 
 Rscript -e 'install.packages("OpenMx", lib="Rlibrary", repos="https://cran.rstudio.com/", dependencies=TRUE)'
+
+Rscript -e 'install.packages("RCurl", lib="Rlibrary", repos="https://cran.rstudio.com/", dependencies=TRUE)'
+
+Rscript -e 'install.packages("bitops", lib="Rlibrary", repos="https://cran.rstudio.com/", dependencies=TRUE)'
+
+Rscript -e 'install.packages("matrixStats", lib="Rlibrary", repos="https://cran.rstudio.com/", dependencies=TRUE)'
+
+Rscript -e 'install.packages("foreach", lib="Rlibrary", repos="https://cran.rstudio.com/", dependencies=TRUE)'
+
+Rscript -e 'install.packages("iterators", lib="Rlibrary", repos="https://cran.rstudio.com/", dependencies=TRUE)'
 
 Rscript -e 'install.packages("HardyWeinberg", lib="Rlibrary", repos="https://cran.rstudio.com/", dependencies=TRUE)'
 
@@ -35,11 +47,19 @@ Rscript -e 'install.packages("semPlot", lib="Rlibrary", repos="https://cran.rstu
 
 Rscript -e 'source("https://bioconductor.org/biocLite.R"); biocLite("limma", ask=F, lib="Rlibrary")'
 
+Rscript -e 'source("https://bioconductor.org/biocLite.R"); biocLite("BiocGenerics", ask=F, lib="Rlibrary")'
+
 Rscript -e 'source("https://bioconductor.org/biocLite.R"); biocLite("minfi", ask=F, lib="Rlibrary")'
 
 Rscript -e 'source("https://bioconductor.org/biocLite.R"); biocLite("GenomeInfoDb", ask=F, lib="Rlibrary")'
 
+Rscript -e 'source("https://bioconductor.org/biocLite.R"); biocLite("S4Vectors", ask=F, lib="Rlibrary")'
+
+Rscript -e 'source("https://bioconductor.org/biocLite.R"); biocLite("IRanges", ask=F, lib="Rlibrary")'
+
 Rscript -e 'source("https://bioconductor.org/biocLite.R"); biocLite("GenomicRanges", ask=F, lib="Rlibrary")'
+
+Rscript -e 'source("https://bioconductor.org/biocLite.R"); biocLite("Biobase", ask=F, lib="Rlibrary")'
 
 Rscript -e 'source("https://bioconductor.org/biocLite.R"); biocLite("IlluminaHumanMethylationEPICanno.ilm10b2.hg19", ask=F, lib="Rlibrary")'
 
