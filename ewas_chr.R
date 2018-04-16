@@ -1,0 +1,261 @@
+# set seed so all randomly created distributions are the same
+set.seed(1)
+
+# find location of this script
+all_args <- commandArgs(trailingOnly = FALSE)
+file_flag <- "--file="
+script_path <- sub(file_flag, "", all_args[grep(file_flag, all_args)])
+script_dir <- dirname(script_path)
+
+.libPaths(file.path(script_dir, 'Rlibrary'))
+
+library(optparse)
+library(limma)
+library(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
+
+source(file.path(script_dir, 'eBayes2.R'))
+
+parse <- OptionParser()
+
+option_list <- list(
+make_option('--pdata', type='character', help="Phenotype CSV with columns 'id' and columns for phenotypes", action='store'),
+make_option('--pheno', type='character', help='Name of phenotype column', action='store'),
+make_option('--out', type='character', help='Output prefix', action='store'),
+make_option('--cov', type='character', help='Covariates file (rds)', action='store'),
+make_option('--sentrix', type='character', help='Linker between GS IDs and Sentrix IDs (rds)', action='store'),
+make_option('--mvals', type='character', help='Mvalue file', action='store'),
+make_option('--pca', type='character', help='PCA file', action='store'),
+make_option('--probes', type='character', help='Mvalue file', action='store'))
+
+
+
+args = commandArgs(trailingOnly=TRUE)
+
+opt <- parse_args(OptionParser(option_list=option_list), args=args)
+
+
+if(is.null(opt[['pdata']])) {
+ stop('Missing phenotype csv argument --pdata')
+}
+if(is.null(opt[['pheno']])) {
+ stop('Missing phenotype argument --pheno')
+}
+
+if(is.null(opt[['cov']])) {
+ stop('Missing covariates argument --cov')
+}
+
+if(is.null(opt[['sentrix']])) {
+ stop('Missing Sentrix sample ID argument --sentrix')
+}
+
+if(is.null(opt[['mvals']])) {
+ stop('Missing Mvalues argument --mvals')
+}
+
+if(is.null(opt[['pca']])) {
+ stop('Missing PCA argument --pca')
+}
+
+if(is.null(opt[['probes']])) {
+ stop('Missing probes argument --probes')
+}
+
+chr <- as.integer(Sys.getenv('SGE_TASK_ID'))
+
+pheno=opt$pheno
+F_PDATA=opt$pdata
+F_COV=opt$cov
+F_SENTRIX=opt$sentrix
+F_PCA=opt$pca
+F_PROBES=opt$probes
+
+out <- opt$out
+
+
+
+check_file_die <- function(file) {
+	if(!file.exists(file)){
+		stop(paste0(file, " doesn't exist\n"))
+	}
+}
+
+rename_file <- function(file) {
+	if(file.exists(file)){
+		file.rename(file, paste0(file, ".previous"))
+	}
+}
+
+logging <- function(str) { cat(paste0(seq, "\t", date(), "\t", str, "\n"), file=NOTES, append=TRUE); seq <<- seq+1 }
+
+############################################################
+
+check_file_die(F_PDATA)
+check_file_die(F_COV)
+check_file_die(F_SENTRIX)
+check_file_die(F_PCA)
+check_file_die(F_PROBES)
+NOTES                   <- paste0(out, ".log")
+seq                     <- 1
+cat(paste0("n\tTime\tWhat\tRows\tCols\n"), file=NOTES, append=TRUE)
+
+############################################################
+
+pdata <- read.table(F_PDATA, sep=",", header=TRUE)
+
+logging(paste0("pdata\t", nrow(pdata)))
+
+covariates <- readRDS(F_COV)
+
+logging(paste0("cov\t", nrow(cov)))
+
+# load linker file between GS IDs and Sentrix IDs
+sentrix <- readRDS(F_SENTRIX)
+
+# looking for outliers
+#jpeg("boxplot-__TRAIT__.jpeg")
+#length(boxplot(pdata$age, range=3)$out)
+#dev.off()
+
+pdata_covariates <- merge(merge(pdata,
+                              sentrix, by='id'),
+                        covariates, by='id', suffixes=c('.x', ''))
+
+pdata_inputs <- pdata_covariates[,c('id', pheno, 'Sample_Sentrix_ID', names(covariates)[-1])]
+
+pdata_na_rows <- which(rowSums(is.na(pdata_inputs)) > 0)
+
+pdata_complete <- pdata_inputs[-pdata_na_rows,]
+
+logging(paste0("pdata complete\t", nrow(pdata_complete), "\t", nrow(pdata_complete)))
+
+#load PCA analysis of residualised M-values 
+system.time({PCA <- readRDS(F_PCA)})[3]
+
+logging(paste0("PCA\t", nrow(PCA), "\t", ncol(PCA)))
+
+
+
+#load list of probes affected by SNPs/that are predicted to cross-hybridise
+probes_to_exclude <- read.table(F_PROBES, sep="\t", header=FALSE)
+
+logging(paste0("probes\t", nrow(probes_to_exclude)))
+
+
+ewas <- function(chr) {
+
+
+  cat(paste('EWAS for chromosome', chr, '\n'))
+  # get path for this chromosome's mvalues 
+  F_MVALS=gsub('%', chr, opt$mvals)
+
+  #load norm mvals object
+  system.time({mvals <- readRDS(F_MVALS)})[3]
+  
+  logging(paste0("mvals\t", nrow(mvals), "\t", ncol(mvals)))
+  
+  # Extracting the sample order from the mvals file. We will use this index to maintain this order in the phenotype and PC data frames.
+  ids <- data.frame(Sample_Sentrix_ID=colnames(mvals), N=c(1:length(colnames(mvals))))
+  
+  logging(paste0("ids\t", nrow(ids), "\t", ncol(ids)))
+  pdata_sentrix <- merge(pdata_complete, ids, by="Sample_Sentrix_ID", all.x=TRUE)
+  
+  logging(paste0("pdata\t", nrow(pdata), "\t", ncol(pdata)))
+  
+  ##sorting the phenotype file
+  pdata_sorted <- pdata_sentrix[order(pdata_sentrix$N),]
+  
+  logging(paste0("pdata\t", nrow(pdata_sorted), "\t", ncol(pdata_sorted)))
+  
+  
+  ##Merge PCs to phenotype data
+  pdata_pcs <- merge(pdata_sorted, PCA, by="Sample_Sentrix_ID", all.x=TRUE)
+  
+  logging(paste0("pdata\t", nrow(pdata), "\t", ncol(pdata)))
+  
+  ##sorting the phenotype file
+  pdata_pcs_sorted <- pdata_pcs[order(pdata_pcs$N),]
+  
+  logging(paste0("pdata\t", nrow(pdata_pcs_sorted), "\t", ncol(pdata_pcs_sorted)))
+  
+  mvals_sentrix <- mvals[,which(colnames(mvals) %in% pdata_sorted$Sample_Sentrix_ID)]
+
+  logging(paste0("mvals\t", nrow(mvals_sentrix), "\t", ncol(mvals_sentrix)))
+  
+  #Exclude SNP/cross-hybridising probes
+  mvals_excl <- mvals_sentrix[-which(rownames(mvals_sentrix) %in% probes_to_exclude$V1),]
+
+  logging(paste0("mvals\t", nrow(mvals_excl), "\t", ncol(mvals_excl)))
+  
+  #Remove rows containing NAs
+  row.has.na <- apply(mvals_excl, 1, function(x){any(is.na(x))})
+  mvals_qc <- mvals_excl[-which(rownames(mvals_excl) %in% names(which(row.has.na))),]
+
+  logging(paste0("mvals\t", nrow(mvals_qc), "\t", ncol(mvals_qc)))
+  
+  
+  # put formula together for phenotype, covariates, and 20 PCs
+  model_formula <- as.formula(paste('~', pheno, '+', paste(names(covariates)[-1], collapse=' + '), '+', paste0('PC', 1:20, collapse=' + ')))
+  
+  design_20 <- model.matrix(model_formula, data=pdata_pcs_sorted)
+  
+  
+  logging(paste0("mvals\t", nrow(mvals), "\t", ncol(mvals)))
+  
+  # verify data ordering
+  
+  if(! all(pdata_pcs_sorted$Sample_Sentrix_ID == names(mvals_qc))) {
+          stop('Design matrix ordering does not match Mvalues')
+  }
+  
+  fit_20 <- lmFit(mvals_qc, design_20)
+
+  rm(mvals, mvals_excl, mvals_sentrix, mvals_qc)
+  gc()
+
+  return(fit_20)
+
+}
+ 
+
+cat(paste(date(), 'Starting EWAS', '\n'))
+# load model fits from each chromosome
+fits_chr <- lapply(1:22, ewas)
+
+# merge into a single MArrayLM
+cat(paste(date(), 'Merging EWAS', '\n'))
+names(fits_chr[[1]])
+
+fits <- 
+new("MArrayLM",
+list(
+coefficients=do.call(rbind, lapply(fits_chr, function(m) m[['coefficients']])),
+rank=fits_chr[[1]]$rank,
+qr=fits_chr[[1]]$qr,
+df.residual=do.call(c, lapply(fits_chr, function(m) m[['df.residual']])),
+sigma=do.call(c, lapply(fits_chr, function(m) m[['sigma']])),
+cov.coefficients=fits_chr[[1]]$cov.coefficients,
+stdev.unscaled=do.call(rbind, lapply(fits_chr, function(m) m[['stdev.unscaled']])),
+pivot=fits_chr[[1]]$pivot,
+Amean=do.call(c, lapply(fits_chr, function(m) m[['Amean']])),
+method=fits_chr[[1]]$method,
+design=fits_chr[[1]]$design))
+
+
+cat(paste(date(), 'eBayes analysis', '\n'))
+efit <- eBayes2(fits)	
+
+TT <- topTable(efit, coef=2, adjust='fdr', number=length(fits$Amean))
+
+TT$ID<-rownames(TT)
+
+# Merge the annotation data
+anno <- getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
+genes <- data.frame(ID=anno$Name, geneSymbol=anno$UCSC_RefGene_Name, CHR=anno$chr, MAPINFO=anno$pos, FEATURE=anno$UCSC_RefGene_Group, CpGISLAND=anno$Relation_to_Island)
+TT_anno <-merge(genes, TT, by="ID", all.y=TRUE)
+
+TT_anno$df <- fits$df.residual
+
+cat(paste(date(), 'Writing results', '\n'))
+write.table(TT_anno, file=paste0(out, ".toptable.txt"), sep="\t", row.names=FALSE)
+
