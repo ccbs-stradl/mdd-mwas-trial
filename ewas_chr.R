@@ -142,6 +142,7 @@ probes_to_exclude <- read.table(F_PROBES, sep="\t", header=FALSE)
 logging(paste0("probes\t", nrow(probes_to_exclude)))
 
 
+
 ewas <- function(chr) {
 
 
@@ -180,16 +181,25 @@ ewas <- function(chr) {
   
   mvals_sentrix <- mvals[,which(colnames(mvals) %in% pdata_sorted$Sample_Sentrix_ID)]
 
+  rm(mvals)
+  gc()
+
   logging(paste0("mvals\t", nrow(mvals_sentrix), "\t", ncol(mvals_sentrix)))
   
   #Exclude SNP/cross-hybridising probes
   mvals_excl <- mvals_sentrix[-which(rownames(mvals_sentrix) %in% probes_to_exclude$V1),]
+
+  rm(mvals_sentrix)
+  gc()
 
   logging(paste0("mvals\t", nrow(mvals_excl), "\t", ncol(mvals_excl)))
   
   #Remove rows containing NAs
   row.has.na <- apply(mvals_excl, 1, function(x){any(is.na(x))})
   mvals_qc <- mvals_excl[-which(rownames(mvals_excl) %in% names(which(row.has.na))),]
+
+  rm(mvals_excl)
+  gc()
 
   logging(paste0("mvals\t", nrow(mvals_qc), "\t", ncol(mvals_qc)))
   
@@ -200,8 +210,6 @@ ewas <- function(chr) {
   design_20 <- model.matrix(model_formula, data=pdata_pcs_sorted)
   
   
-  logging(paste0("mvals\t", nrow(mvals), "\t", ncol(mvals)))
-  
   # verify data ordering
   
   if(! all(pdata_pcs_sorted$Sample_Sentrix_ID == names(mvals_qc))) {
@@ -210,12 +218,13 @@ ewas <- function(chr) {
   
   fit_20 <- lmFit(mvals_qc, design_20)
 
-  rm(mvals, mvals_excl, mvals_sentrix, mvals_qc)
+  rm(design_20, mvals_qc)
   gc()
 
   return(fit_20)
 
 }
+
  
 
 cat(paste(date(), 'Starting EWAS', '\n'))
