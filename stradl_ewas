@@ -3,6 +3,11 @@
 #
 # ARG_OPTIONAL_SINGLE([pdata],[d],[Input phenotypes csv file])
 # ARG_OPTIONAL_SINGLE([pheno],[p],[Name of phenotype])
+# ARG_OPTIONAL_SINGLE([cov],[c],[Covariates RDS (model specification)],[/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/wave1_modelE_covariates.rds])
+# ARG_OPTIONAL_SINGLE([sentrix],[s],[Sentrix ID linker],[/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/sentrix.rds])
+# ARG_OPTIONAL_SINGLE([mvals],[m],[Mvalues chromosome file pattern],[/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/chr/mvalues.chr%.rds])
+# ARG_OPTIONAL_SINGLE([pca],[e],[PCA file],[/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/Konrad_Corrected_resid_mvals_relateds_PCA_PC50_301017.rds])
+# ARG_OPTIONAL_SINGLE([probes],[r],[Probes to exclude],[/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/SNP_CH_probes])
 # ARG_OPTIONAL_SINGLE([out],[o],[Output prefix])
 # ARG_VERSION([echo test v$version])
 # ARG_HELP([The general script's help msg])
@@ -13,13 +18,6 @@
 # Argbash is FREE SOFTWARE, see https://argbash.io for more info
 # Generated online by https://argbash.io/generate
 
-# When called, the process ends.
-# Args:
-# 	$1: The exit message (print to stderr)
-# 	$2: The exit code (default is 1)
-# if env var _PRINT_HELP is set to 'yes', the usage is print to stderr (prior to )
-# Example:
-# 	test -f "$_arg_infile" || _PRINT_HELP=yes die "Can't continue, have to supply file as an argument, got '$_arg_infile'" 4
 die()
 {
 	local _ret=$2
@@ -29,13 +27,10 @@ die()
 	exit ${_ret}
 }
 
-# Function that evaluates whether a value passed to it begins by a character
-# that is a short option of an argument the script knows about.
-# This is required in order to support getopts-like short options grouping.
 begins_with_short_option()
 {
 	local first_option all_short_options
-	all_short_options='dpovh'
+	all_short_options='dpcsmerovh'
 	first_option="${1:0:1}"
 	test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
 }
@@ -45,100 +40,135 @@ begins_with_short_option()
 # THE DEFAULTS INITIALIZATION - OPTIONALS
 _arg_pdata=
 _arg_pheno=
+_arg_cov="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/wave1_modelE_covariates.rds"
+_arg_sentrix="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/sentrix.rds"
+_arg_mvals="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/chr/mvalues.chr%.rds"
+_arg_pca="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/Konrad_Corrected_resid_mvals_relateds_PCA_PC50_301017.rds"
+_arg_probes="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/SNP_CH_probes"
 _arg_out=
 
-# Function that prints general usage of the script.
-# This is useful if users asks for it, or if there is an argument parsing error (unexpected / spurious arguments)
-# and it makes sense to remind the user how the script is supposed to be called.
 print_help ()
 {
 	printf '%s\n' "The general script's help msg"
-	printf 'Usage: %s [-d|--pdata <arg>] [-p|--pheno <arg>] [-o|--out <arg>] [-v|--version] [-h|--help]\n' "$0"
+	printf 'Usage: %s [-d|--pdata <arg>] [-p|--pheno <arg>] [-c|--cov <arg>] [-s|--sentrix <arg>] [-m|--mvals <arg>] [-e|--pca <arg>] [-r|--probes <arg>] [-o|--out <arg>] [-v|--version] [-h|--help]\n' "$0"
 	printf '\t%s\n' "-d,--pdata: Input phenotypes csv file (no default)"
 	printf '\t%s\n' "-p,--pheno: Name of phenotype (no default)"
+	printf '\t%s\n' "-c,--cov: Covariates RDS (model specification) (default: '/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/wave1_modelE_covariates.rds')"
+	printf '\t%s\n' "-s,--sentrix: Sentrix ID linker (default: '/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/sentrix.rds')"
+	printf '\t%s\n' "-m,--mvals: Mvalues chromosome file pattern (default: '/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/chr/mvalues.chr%.rds')"
+	printf '\t%s\n' "-e,--pca: PCA file (default: '/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/Konrad_Corrected_resid_mvals_relateds_PCA_PC50_301017.rds')"
+	printf '\t%s\n' "-r,--probes: Probes to exclude (default: '/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/SNP_CH_probes')"
 	printf '\t%s\n' "-o,--out: Output prefix (no default)"
 	printf '\t%s\n' "-v,--version: Prints version"
 	printf '\t%s\n' "-h,--help: Prints help"
 }
 
-# The parsing of the command-line
 parse_commandline ()
 {
 	while test $# -gt 0
 	do
 		_key="$1"
 		case "$_key" in
-			# We support whitespace as a delimiter between option argument and its value.
-			# Therefore, we expect the --pdata or -d value.
-			# so we watch for --pdata and -d.
-			# Since we know that we got the long or short option,
-			# we just reach out for the next argument to get the value.
 			-d|--pdata)
 				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
 				_arg_pdata="$2"
 				shift
 				;;
-			# We support the = as a delimiter between option argument and its value.
-			# Therefore, we expect --pdata=value, so we watch for --pdata=*
-			# For whatever we get, we strip '--pdata=' using the ${var##--pdata=} notation
-			# to get the argument value
 			--pdata=*)
 				_arg_pdata="${_key##--pdata=}"
 				;;
-			# We support getopts-style short arguments grouping,
-			# so as -d accepts value, we allow it to be appended to it, so we watch for -d*
-			# and we strip the leading -d from the argument string using the ${var##-d} notation.
 			-d*)
 				_arg_pdata="${_key##-d}"
 				;;
-			# See the comment of option '--pdata' to see what's going on here - principle is the same.
 			-p|--pheno)
 				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
 				_arg_pheno="$2"
 				shift
 				;;
-			# See the comment of option '--pdata=' to see what's going on here - principle is the same.
 			--pheno=*)
 				_arg_pheno="${_key##--pheno=}"
 				;;
-			# See the comment of option '-d' to see what's going on here - principle is the same.
 			-p*)
 				_arg_pheno="${_key##-p}"
 				;;
-			# See the comment of option '--pdata' to see what's going on here - principle is the same.
+			-c|--cov)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_cov="$2"
+				shift
+				;;
+			--cov=*)
+				_arg_cov="${_key##--cov=}"
+				;;
+			-c*)
+				_arg_cov="${_key##-c}"
+				;;
+			-s|--sentrix)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_sentrix="$2"
+				shift
+				;;
+			--sentrix=*)
+				_arg_sentrix="${_key##--sentrix=}"
+				;;
+			-s*)
+				_arg_sentrix="${_key##-s}"
+				;;
+			-m|--mvals)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_mvals="$2"
+				shift
+				;;
+			--mvals=*)
+				_arg_mvals="${_key##--mvals=}"
+				;;
+			-m*)
+				_arg_mvals="${_key##-m}"
+				;;
+			-e|--pca)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_pca="$2"
+				shift
+				;;
+			--pca=*)
+				_arg_pca="${_key##--pca=}"
+				;;
+			-e*)
+				_arg_pca="${_key##-e}"
+				;;
+			-r|--probes)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_probes="$2"
+				shift
+				;;
+			--probes=*)
+				_arg_probes="${_key##--probes=}"
+				;;
+			-r*)
+				_arg_probes="${_key##-r}"
+				;;
 			-o|--out)
 				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
 				_arg_out="$2"
 				shift
 				;;
-			# See the comment of option '--pdata=' to see what's going on here - principle is the same.
 			--out=*)
 				_arg_out="${_key##--out=}"
 				;;
-			# See the comment of option '-d' to see what's going on here - principle is the same.
 			-o*)
 				_arg_out="${_key##-o}"
 				;;
-			# The version argurment doesn't accept a value,
-			# we expect the --version or -v, so we watch for them.
 			-v|--version)
 				echo test v$version
 				exit 0
 				;;
-			# We support getopts-style short arguments clustering,
-			# so as -v doesn't accept value, other short options may be appended to it, so we watch for -v*.
-			# After stripping the leading -v from the argument, we have to make sure
-			# that the first character that follows coresponds to a short option.
 			-v*)
 				echo test v$version
 				exit 0
 				;;
-			# See the comment of option '--version' to see what's going on here - principle is the same.
 			-h|--help)
 				print_help
 				exit 0
 				;;
-			# See the comment of option '-v' to see what's going on here - principle is the same.
 			-h*)
 				print_help
 				exit 0
@@ -151,7 +181,6 @@ parse_commandline ()
 	done
 }
 
-# Now call all the functions defined above that are needed to get the job done
 parse_commandline "$@"
 
 # OTHER STUFF GENERATED BY Argbash
@@ -186,23 +215,47 @@ if [ ! -f $_arg_pdata ]; then
   exit
 fi
 
-input_has_id=$(Rscript -e "cat('id' %in% names(read.csv('wave1_cognitive_smr.csv', header=T)))")
+input_has_id=$(Rscript -e "cat('id' %in% names(read.csv('$_arg_pdata', header=T)))")
 
 if [ ! $input_has_id == "TRUE" ]; then
   echo "Error: Phenotype input file has no column 'id': $_arg_pdata"
   exit
 fi
 
-input_has_pheno=$(Rscript -e "cat('$_arg_pheno' %in% names(read.csv('wave1_cognitive_smr.csv', header=T)))")
+input_has_pheno=$(Rscript -e "cat('$_arg_pheno' %in% names(read.csv('$_arg_pdata', header=T)))")
 
 if [ ! $input_has_pheno == "TRUE" ]; then
   echo "Error: Phenotype input file has no column '$_arg_pheno': $_arg_pdata"
   echo "Coluumns are:"
-  echo $(Rscript -e "cat(names(read.csv('wave1_cognitive_smr.csv', header=T)))")
+  echo $(Rscript -e "cat(names(read.csv('$_arg_pdata', header=T)))")
   exit
 fi
 
+# check covariate file
+if [ ! -f $_arg_cov ]; then
+  echo "Error: Covariate model file cannot be found: $_arg_cov"
+  exit
+fi
 
+cov_has_id=$(Rscript -e "cat('id' %in% names(readRDS('$_arg_cov')))")
+
+if [ ! $cov_has_id == "TRUE" ]; then
+  echo "Error: Covariate model file has no column 'id': $_arg_cov"
+  exit
+fi
+
+sentrix_has_id=$(Rscript -e "cat('id' %in% names(readRDS('$_arg_sentrix')))")
+sentrix_has_sentrix=$(Rscript -e "cat('Sample_Sentrix_ID' %in% names(readRDS('$_arg_sentrix')))")
+
+if [ ! $sentrix_has_id == "TRUE" ]; then
+  echo "Error: Sentrix linker file has no column 'id': $_arg_sentrix"
+  exit
+fi
+
+if [ ! $sentrix_has_sentrix == "TRUE" ]; then
+  echo "Error: Sentrix linker file has no column 'Sample_Sentrix_ID': $_arg_sentrix"
+  exit
+fi
 
 # check output file
 if [ -f ${_arg_out}.toptable.txt ]; then
@@ -212,7 +265,7 @@ fi
 
 job_name=ewas_$(basename $_arg_pdata .csv)_$_arg_pheno
 
-qsub -N $job_name /exports/igmm/eddie/GenScotDepression/local/EWAS/ewas_chr.sh --pdata $_arg_pdata --pheno $_arg_pheno --out $_arg_out --cov $data/wave1_covariates.rds --sentrix $data/sentrix.rds --mvals $data/chr/mvalues.chr%.rds --pca $data/Konrad_Corrected_resid_mvals_relateds_PCA_PC50_301017.rds --probes $data/SNP_CH_probes 
+echo qsub -N $job_name /exports/igmm/eddie/GenScotDepression/local/EWAS/ewas_chr.sh --pdata $_arg_pdata --pheno $_arg_pheno --out $_arg_out --cov $_arg_cov --sentrix $_arg_sentrix --mvals $_arg_mvals --pca $_arg_pca --probes $_arg_probes 
 
 
 # ] <-- needed because of Argbash
