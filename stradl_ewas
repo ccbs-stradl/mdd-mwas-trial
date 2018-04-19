@@ -279,13 +279,25 @@ if [ -f ${_arg_out}.toptable.txt ]; then
   flag_error=true
 fi
 
+# check mvalue pattern
+for chr in $(seq 1 22); do
+
+  mval_chr_file=$(echo $_arg_mvals | sed s/%/$chr/)
+  
+  if [ ! -f $mval_chr_file ]; then
+     echo "Error missing Mvalue file for chromosome $chr: $mval_chr_file"
+     flag_error=true
+  fi
+done
+
+
 if [ "$flag_error" = true ]; then
         exit
 fi
 
 job_name=ewas_$(basename $_arg_pdata .csv)_$_arg_pheno
 
-qsub -N $job_name $script_dir/ewas_chr.sh --pdata $_arg_pdata --pheno $_arg_pheno --out $_arg_out --cov $_arg_cov --sentrix $_arg_sentrix --mvals $_arg_mvals --pca $_arg_pca --exclude $_arg_exclude 
+echo qsub -N $job_name $script_dir/ewas_chr.sh --pdata $_arg_pdata --pheno $_arg_pheno --out $_arg_out --cov $_arg_cov --sentrix $_arg_sentrix --mvals $_arg_mvals --pca $_arg_pca --exclude $_arg_exclude 
 
 
 # ] <-- needed because of Argbash
