@@ -7,7 +7,7 @@
 # ARG_OPTIONAL_SINGLE([sentrix],[s],[Sentrix ID linker],[/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/sentrix.rds])
 # ARG_OPTIONAL_SINGLE([mvals],[m],[Mvalues chromosome file pattern],[/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/chr/mvalues.chr%.rds])
 # ARG_OPTIONAL_SINGLE([pca],[e],[PCA file],[/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/Konrad_Corrected_resid_mvals_relateds_PCA_PC50_301017.rds])
-# ARG_OPTIONAL_SINGLE([probes],[r],[Probes to exclude],[/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/SNP_CH_probes])
+# ARG_OPTIONAL_SINGLE([exclude],[x],[Probes to exclude],[/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/SNP_CH_probes])
 # ARG_OPTIONAL_SINGLE([out],[o],[Output prefix])
 # ARG_VERSION([echo test v$version])
 # ARG_HELP([The general script's help msg])
@@ -44,20 +44,20 @@ _arg_cov="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/
 _arg_sentrix="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/sentrix.rds"
 _arg_mvals="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/chr/mvalues.chr%.rds"
 _arg_pca="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/Konrad_Corrected_resid_mvals_relateds_PCA_PC50_301017.rds"
-_arg_probes="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/SNP_CH_probes"
+_arg_exclude="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/SNP_CH_probes"
 _arg_out=
 
 print_help ()
 {
 	printf '%s\n' "The general script's help msg"
-	printf 'Usage: %s [-d|--pdata <arg>] [-p|--pheno <arg>] [-c|--cov <arg>] [-s|--sentrix <arg>] [-m|--mvals <arg>] [-e|--pca <arg>] [-r|--probes <arg>] [-o|--out <arg>] [-v|--version] [-h|--help]\n' "$0"
+	printf 'Usage: %s [-d|--pdata <arg>] [-p|--pheno <arg>] [-c|--cov <arg>] [-s|--sentrix <arg>] [-m|--mvals <arg>] [-e|--pca <arg>] [-r|--exclude <arg>] [-o|--out <arg>] [-v|--version] [-h|--help]\n' "$0"
 	printf '\t%s\n' "-d,--pdata: Input phenotypes csv file (no default)"
 	printf '\t%s\n' "-p,--pheno: Name of phenotype (no default)"
 	printf '\t%s\n' "-c,--cov: Covariates RDS (model specification) (default: '/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/wave1_modelE_covariates.rds')"
 	printf '\t%s\n' "-s,--sentrix: Sentrix ID linker (default: '/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/sentrix.rds')"
 	printf '\t%s\n' "-m,--mvals: Mvalues chromosome file pattern (default: '/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/chr/mvalues.chr%.rds')"
 	printf '\t%s\n' "-e,--pca: PCA file (default: '/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/Konrad_Corrected_resid_mvals_relateds_PCA_PC50_301017.rds')"
-	printf '\t%s\n' "-r,--probes: Probes to exclude (default: '/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/SNP_CH_probes')"
+	printf '\t%s\n' "-r,--exclude: Probes to exclude (default: '/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/SNP_CH_probes')"
 	printf '\t%s\n' "-o,--out: Output prefix (no default)"
 	printf '\t%s\n' "-v,--version: Prints version"
 	printf '\t%s\n' "-h,--help: Prints help"
@@ -135,16 +135,16 @@ parse_commandline ()
 			-e*)
 				_arg_pca="${_key##-e}"
 				;;
-			-r|--probes)
+			-r|--exclude)
 				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
-				_arg_probes="$2"
+				_arg_exclude="$2"
 				shift
 				;;
-			--probes=*)
-				_arg_probes="${_key##--probes=}"
+			--exclude=*)
+				_arg_exclude="${_key##--exclude=}"
 				;;
 			-r*)
-				_arg_probes="${_key##-r}"
+				_arg_exclude="${_key##-r}"
 				;;
 			-o|--out)
 				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
@@ -286,7 +286,7 @@ fi
 
 job_name=ewas_$(basename $_arg_pdata .csv)_$_arg_pheno
 
-qsub -N $job_name /exports/igmm/eddie/GenScotDepression/local/EWAS/ewas_chr.sh --pdata $_arg_pdata --pheno $_arg_pheno --out $_arg_out --cov $_arg_cov --sentrix $_arg_sentrix --mvals $_arg_mvals --pca $_arg_pca --probes $_arg_probes 
+qsub -N $job_name /exports/igmm/eddie/GenScotDepression/local/EWAS/ewas_chr.sh --pdata $_arg_pdata --pheno $_arg_pheno --out $_arg_out --cov $_arg_cov --sentrix $_arg_sentrix --mvals $_arg_mvals --pca $_arg_pca --exclude $_arg_exclude 
 
 
 # ] <-- needed because of Argbash
