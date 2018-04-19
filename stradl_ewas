@@ -1,5 +1,5 @@
 #!/bin/bash
-# version="0.1"
+# version="0.2"
 #
 # ARG_OPTIONAL_SINGLE([pdata],[d],[Input phenotypes csv file])
 # ARG_OPTIONAL_SINGLE([pheno],[p],[Name of phenotype])
@@ -192,34 +192,55 @@ data=/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalu
 
 mkdir -p logs
 
+flag_error=false
 
 # check required arguments
 if [ -z $_arg_pdata ]; then
         echo "Missing required argument --pdata CSV"
-        exit
+        flag_error=true
 fi
 
 if [ -z $_arg_pheno ]; then
         echo "Missing required argument --pheno PHENOTYPE"
-        exit
+        flag_error=true
 fi
 
 if [ -z $_arg_out ]; then
         echo "Missing required argument --out PREFIX"
+        flag_error=true
+fi
+
+if [ "$flag_error" = true ]; then
+        echo here
         exit
 fi
 
-# check input file
+# check existence of files
 if [ ! -f $_arg_pdata ]; then
   echo "Error: Phenotype input file cannot be found: $_arg_pdata"
-  exit
+  flag_error=true
 fi
 
+if [ ! -f $_arg_cov ]; then
+  echo "Error: Covariate model file cannot be found: $_arg_cov"
+  flag_error=true
+fi
+
+if [ ! -f $_arg_sentrix ]; then
+  echo "Error: Sentrix linker file cannot be found: $_arg_sentrix"
+  flag_error=true
+fi
+
+if [ "$flag_error" = true ]; then
+        exit
+fi
+
+# check structure of files
 input_has_id=$(Rscript -e "cat('id' %in% names(read.csv('$_arg_pdata', header=T)))")
 
 if [ ! $input_has_id == "TRUE" ]; then
   echo "Error: Phenotype input file has no column 'id': $_arg_pdata"
-  exit
+  flag_error=true
 fi
 
 input_has_pheno=$(Rscript -e "cat('$_arg_pheno' %in% names(read.csv('$_arg_pdata', header=T)))")
@@ -228,20 +249,16 @@ if [ ! $input_has_pheno == "TRUE" ]; then
   echo "Error: Phenotype input file has no column '$_arg_pheno': $_arg_pdata"
   echo "Coluumns are:"
   echo $(Rscript -e "cat(names(read.csv('$_arg_pdata', header=T)))")
-  exit
+  flag_error=true
 fi
 
 # check covariate file
-if [ ! -f $_arg_cov ]; then
-  echo "Error: Covariate model file cannot be found: $_arg_cov"
-  exit
-fi
 
 cov_has_id=$(Rscript -e "cat('id' %in% names(readRDS('$_arg_cov')))")
 
 if [ ! $cov_has_id == "TRUE" ]; then
   echo "Error: Covariate model file has no column 'id': $_arg_cov"
-  exit
+  flag_error=true
 fi
 
 sentrix_has_id=$(Rscript -e "cat('id' %in% names(readRDS('$_arg_sentrix')))")
@@ -249,23 +266,27 @@ sentrix_has_sentrix=$(Rscript -e "cat('Sample_Sentrix_ID' %in% names(readRDS('$_
 
 if [ ! $sentrix_has_id == "TRUE" ]; then
   echo "Error: Sentrix linker file has no column 'id': $_arg_sentrix"
-  exit
+  flag_error=true
 fi
 
 if [ ! $sentrix_has_sentrix == "TRUE" ]; then
   echo "Error: Sentrix linker file has no column 'Sample_Sentrix_ID': $_arg_sentrix"
-  exit
+  flag_error=true
 fi
 
 # check output file
 if [ -f ${_arg_out}.toptable.txt ]; then
   echo "Error: Output file already exists: ${_arg_out}.toptable.txt"
-  exit
+  flag_error=true
+fi
+
+if [ "$flag_error" = true ]; then
+        exit
 fi
 
 job_name=ewas_$(basename $_arg_pdata .csv)_$_arg_pheno
 
-echo qsub -N $job_name /exports/igmm/eddie/GenScotDepression/local/EWAS/ewas_chr.sh --pdata $_arg_pdata --pheno $_arg_pheno --out $_arg_out --cov $_arg_cov --sentrix $_arg_sentrix --mvals $_arg_mvals --pca $_arg_pca --probes $_arg_probes 
+qsub -N $job_name /exports/igmm/eddie/GenScotDepression/local/EWAS/ewas_chr.sh --pdata $_arg_pdata --pheno $_arg_pheno --out $_arg_out --cov $_arg_cov --sentrix $_arg_sentrix --mvals $_arg_mvals --pca $_arg_pca --probes $_arg_probes 
 
 
 # ] <-- needed because of Argbash
