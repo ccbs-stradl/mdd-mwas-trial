@@ -25,7 +25,7 @@ make_option('--cov', type='character', help='Covariates file (rds)', action='sto
 make_option('--sentrix', type='character', help='Linker between GS IDs and Sentrix IDs (rds)', action='store'),
 make_option('--mvals', type='character', help='Mvalue file', action='store'),
 make_option('--pca', type='character', help='PCA file', action='store'),
-make_option('--probes', type='character', help='Mvalue file', action='store'))
+make_option('--exclude', type='character', help='Probes to exclude', action='store'))
 
 
 
@@ -68,7 +68,7 @@ F_PDATA=opt$pdata
 F_COV=opt$cov
 F_SENTRIX=opt$sentrix
 F_PCA=opt$pca
-F_PROBES=opt$probes
+F_PROBES=opt$exclude
 
 out <- opt$out
 
@@ -112,7 +112,9 @@ check_file_die(F_PDATA)
 check_file_die(F_COV)
 check_file_die(F_SENTRIX)
 check_file_die(F_PCA)
-check_file_die(F_PROBES)
+if(!is.null(F_PROBES)) {
+  check_file_die(F_PROBES)
+}
 ############################################################
 
 
@@ -151,7 +153,11 @@ system.time({PCA <- readRDS(F_PCA)})[3]
 
 
 #load list of probes affected by SNPs/that are predicted to cross-hybridise
-probes_to_exclude <- read.table(F_PROBES, sep="\t", header=FALSE)
+if(!is.null(F_PROBES)) {
+  probes_to_exclude <- read.table(F_PROBES, sep="\t", header=FALSE)
+} else {
+  probes_to_exclude <- data.frame(V1=NULL)
+}
 
 logging(c('Probes excluded: ', nrow(probes_to_exclude)))
 
