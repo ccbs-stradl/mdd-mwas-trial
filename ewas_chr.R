@@ -57,10 +57,6 @@ if(is.null(opt[['pca']])) {
  stop('Missing PCA argument --pca')
 }
 
-if(is.null(opt[['probes']])) {
- stop('Missing probes argument --probes')
-}
-
 chr <- as.integer(Sys.getenv('SGE_TASK_ID'))
 
 pheno=opt$pheno
