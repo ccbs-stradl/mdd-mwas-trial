@@ -136,9 +136,9 @@ pdata_covariates <- merge(merge(pdata,
 
 pdata_inputs <- pdata_covariates[,c('id', pheno, 'Sample_Sentrix_ID', names(covariates)[-1])]
 
-pdata_na_rows <- which(rowSums(is.na(pdata_inputs)) > 0)
+pdata_complete_rows <- which(rowSums(is.na(pdata_inputs)) == 0)
 
-pdata_complete <- pdata_inputs[-pdata_na_rows,]
+pdata_complete <- pdata_inputs[pdata_complete_rows,]
 
 logging(c('Complete phenotype and covariates: ', nrow(pdata_complete)))
 
