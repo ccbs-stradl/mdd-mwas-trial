@@ -25,6 +25,7 @@ make_option('--cov', type='character', help='Covariates file (rds)', action='sto
 make_option('--sentrix', type='character', help='Linker between GS IDs and Sentrix IDs (rds)', action='store'),
 make_option('--mvals', type='character', help='Mvalue file', action='store'),
 make_option('--pca', type='character', help='PCA file', action='store'),
+make_option('--prune', action='store_true', default=FALSE,  help='Prune probes with missing samples'),
 make_option('--exclude', type='character', help='Probes to exclude', action='store'))
 
 
@@ -196,12 +197,15 @@ ewas <- function(chr) {
   gc()
 
   #Remove rows containing NAs
-  row.has.na <- apply(mvals_excl, 1, function(x){any(is.na(x))})
-  mvals_qc <- mvals_excl[-which(rownames(mvals_excl) %in% names(which(row.has.na))),]
+  if(opt$prune) {
+    row.has.na <- apply(mvals_excl, 1, function(x){any(is.na(x))})
+    mvals_qc <- mvals_excl[-which(rownames(mvals_excl) %in% names(which(row.has.na))),]
+  } else {
+    mvals_qc <- mvals_excl
+  }
 
   rm(mvals_excl)
   gc()
-
   
   # put formula together for phenotype, covariates, and 20 PCs
   model_formula <- as.formula(paste('~', pheno, '+', paste(names(covariates)[-1], collapse=' + '), '+', paste0('PC', 1:20, collapse=' + ')))
