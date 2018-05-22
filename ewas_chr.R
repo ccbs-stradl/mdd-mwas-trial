@@ -223,6 +223,8 @@ ewas <- function(chr) {
   
   fit_20 <- lmFit(mvals_qc, design_20)
 
+  fit_20$N <- rowSums(!is.na(mvals_qc))
+
   rm(design_20, mvals_qc)
   gc()
 
@@ -253,7 +255,8 @@ stdev.unscaled=do.call(rbind, lapply(fits_chr, function(m) m[['stdev.unscaled']]
 pivot=fits_chr[[1]]$pivot,
 Amean=do.call(c, lapply(fits_chr, function(m) m[['Amean']])),
 method=fits_chr[[1]]$method,
-design=fits_chr[[1]]$design))
+design=fits_chr[[1]]$design,
+N=do.call(c, lapply(fits_chr, function(m) m[['N']]))))
 
 
 cat(paste(date(), 'eBayes analysis', '\n'))
