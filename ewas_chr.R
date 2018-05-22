@@ -210,6 +210,7 @@ ewas <- function(chr) {
 
   if(chr == 1) {
           logging(c('Model: ', model_formula))
+          logging(c('Design matrix: ', paste('~', paste(dimnames(design_20)[[2]], collapse=' + '))))
           logging(c('EWAS sample size: ', nrow(design_20)))
   }
 
