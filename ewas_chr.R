@@ -279,10 +279,42 @@ TT_anno <-merge(genes, TT, by="ID", all.y=TRUE)
 
 TT_anno$df <- fits$df.residual
 
-output_file <- paste0(out, ".toptable.txt")
+# linear models
 
-logging(c('Results file: ', output_file))
+fits_n <- data.frame(ID=names(fits$N),  N=fits$N)
+
+pheno_betas <- data.frame(ID=row.names(fits$coefficients), beta=fits$coefficients[,2])
+
+TT_linear <- TT_anno;
+TT_linear$beta <- fits$coefficients[as.character(TT_linear$ID),pheno];
+TT_linear$n <- fits$n[as.character(TT_linear$ID)];
+TT_linear$se <- TT_linear$beta / TT_linear$t
+
+efit_betas <- plyr::adply(efit$coefficients, 1, function(x) data.frame(param=names(x), beta=x))
+
+names(efit_betas)[1] <- 'ID'
+
+efit_t <- plyr::adply(efit$t, 1, function(x) data.frame(param=names(x), t=x))
+
+names(efit_t)[1] <- 'ID'
+
+efit_p <- plyr::adply(efit$p.value, 1, function(x) data.frame(param=names(x), p=x))
+
+names(efit_p)[1] <- 'ID'
+
+efit_linear <- efit_betas
+efit_linear$t <- efit_t$t
+efit_linear$p <- efit_p$p
+efit_linear$se <- efit_linear$beta / efit_linear$t
+
+
+tt_output_file <- paste0(out, ".toptable.txt")
+lm_output_file <- paste0(out, ".linear.txt")
+
+logging(c('Top-ranked genes: ', tt_output_file))
+logging(c('Linear model output: ', lm_output_file))
 cat(paste(date(), 'Writing results', '\n'))
-write.table(TT_anno, file=output_file, sep="\t", row.names=FALSE)
+write.table(TT_linear, file=tt_output_file, sep="\t", row.names=FALSE, quote=F)
+write.table(efit_linear[,c('ID', 'param', 'beta', 'se', 't', 'p')], file=lm_output_file, sep="\t", row.names=FALSE, quote=F)
 
 logging(c('Finished: ', date()))
