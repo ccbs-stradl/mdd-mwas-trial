@@ -287,8 +287,8 @@ pheno_betas <- data.frame(ID=row.names(fits$coefficients), beta=fits$coefficient
 
 TT_linear <- TT_anno;
 TT_linear$beta <- fits$coefficients[as.character(TT_linear$ID),pheno];
-TT_linear$n <- fits$n[as.character(TT_linear$ID)];
 TT_linear$se <- TT_linear$beta / TT_linear$t
+TT_linear$N <- fits$N[as.character(TT_linear$ID)];
 
 efit_betas <- plyr::adply(efit$coefficients, 1, function(x) data.frame(param=names(x), beta=x))
 
