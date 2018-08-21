@@ -25,6 +25,7 @@ make_option('--cov', type='character', help='Covariates file (rds)', action='sto
 make_option('--sentrix', type='character', help='Linker between GS IDs and Sentrix IDs (rds)', action='store'),
 make_option('--mvals', type='character', help='Mvalue file', action='store'),
 make_option('--pca', type='character', help='PCA file', action='store'),
+make_option('--prune', action='store_true', default=FALSE,  help='Prune probes with missing samples'),
 make_option('--exclude', type='character', help='Probes to exclude', action='store'))
 
 
@@ -196,12 +197,15 @@ ewas <- function(chr) {
   gc()
 
   #Remove rows containing NAs
-  row.has.na <- apply(mvals_excl, 1, function(x){any(is.na(x))})
-  mvals_qc <- mvals_excl[-which(rownames(mvals_excl) %in% names(which(row.has.na))),]
+  if(opt$prune) {
+    row.has.na <- apply(mvals_excl, 1, function(x){any(is.na(x))})
+    mvals_qc <- mvals_excl[-which(rownames(mvals_excl) %in% names(which(row.has.na))),]
+  } else {
+    mvals_qc <- mvals_excl
+  }
 
   rm(mvals_excl)
   gc()
-
   
   # put formula together for phenotype, covariates, and 20 PCs
   model_formula <- as.formula(paste('~', pheno, '+', paste(names(covariates)[-1], collapse=' + '), '+', paste0('PC', 1:20, collapse=' + ')))
@@ -210,6 +214,7 @@ ewas <- function(chr) {
 
   if(chr == 1) {
           logging(c('Model: ', model_formula))
+          logging(c('Design matrix: ', paste('~', paste(dimnames(design_20)[[2]], collapse=' + '))))
           logging(c('EWAS sample size: ', nrow(design_20)))
   }
 
@@ -221,6 +226,8 @@ ewas <- function(chr) {
   }
   
   fit_20 <- lmFit(mvals_qc, design_20)
+
+  fit_20$N <- rowSums(!is.na(mvals_qc))
 
   rm(design_20, mvals_qc)
   gc()
@@ -252,7 +259,8 @@ stdev.unscaled=do.call(rbind, lapply(fits_chr, function(m) m[['stdev.unscaled']]
 pivot=fits_chr[[1]]$pivot,
 Amean=do.call(c, lapply(fits_chr, function(m) m[['Amean']])),
 method=fits_chr[[1]]$method,
-design=fits_chr[[1]]$design))
+design=fits_chr[[1]]$design,
+N=do.call(c, lapply(fits_chr, function(m) m[['N']]))))
 
 
 cat(paste(date(), 'eBayes analysis', '\n'))
@@ -271,10 +279,42 @@ TT_anno <-merge(genes, TT, by="ID", all.y=TRUE)
 
 TT_anno$df <- fits$df.residual
 
-output_file <- paste0(out, ".toptable.txt")
+# linear models
 
-logging(c('Results file: ', output_file))
+fits_n <- data.frame(ID=names(fits$N),  N=fits$N)
+
+pheno_betas <- data.frame(ID=row.names(fits$coefficients), beta=fits$coefficients[,2])
+
+TT_linear <- TT_anno;
+TT_linear$beta <- fits$coefficients[as.character(TT_linear$ID),pheno];
+TT_linear$se <- TT_linear$beta / TT_linear$t
+TT_linear$N <- fits$N[as.character(TT_linear$ID)];
+
+efit_betas <- plyr::adply(efit$coefficients, 1, function(x) data.frame(param=names(x), beta=x))
+
+names(efit_betas)[1] <- 'ID'
+
+efit_t <- plyr::adply(efit$t, 1, function(x) data.frame(param=names(x), t=x))
+
+names(efit_t)[1] <- 'ID'
+
+efit_p <- plyr::adply(efit$p.value, 1, function(x) data.frame(param=names(x), p=x))
+
+names(efit_p)[1] <- 'ID'
+
+efit_linear <- efit_betas
+efit_linear$t <- efit_t$t
+efit_linear$p <- efit_p$p
+efit_linear$se <- efit_linear$beta / efit_linear$t
+
+
+tt_output_file <- paste0(out, ".toptable.txt")
+lm_output_file <- paste0(out, ".linear.txt")
+
+logging(c('Top-ranked genes: ', tt_output_file))
+logging(c('Linear model output: ', lm_output_file))
 cat(paste(date(), 'Writing results', '\n'))
-write.table(TT_anno, file=output_file, sep="\t", row.names=FALSE)
+write.table(TT_linear, file=tt_output_file, sep="\t", row.names=FALSE, quote=F)
+write.table(efit_linear[,c('ID', 'param', 'beta', 'se', 't', 'p')], file=lm_output_file, sep="\t", row.names=FALSE, quote=F)
 
 logging(c('Finished: ', date()))
