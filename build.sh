@@ -34,6 +34,8 @@ Rscript -e 'install.packages("iterators", lib="Rlibrary", repos="https://cran.rs
 
 Rscript -e 'install.packages("HardyWeinberg", lib="Rlibrary", repos="https://cran.rstudio.com/", dependencies=TRUE)'
 
+Rscript -e 'install.packages("gee", lib="Rlibrary", repos="https://cran.rstudio.com/", dependencies=TRUE)'
+
 
 #curl -O https://cran.r-project.org/src/contrib/rtiff_1.4.5.tar.gz
 
