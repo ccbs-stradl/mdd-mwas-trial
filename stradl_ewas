@@ -5,7 +5,7 @@
 #
 # ARG_OPTIONAL_SINGLE([pdata],[d],[Input phenotypes csv file])
 # ARG_OPTIONAL_SINGLE([pheno],[p],[Name of phenotype])
-# ARG_OPTIONAL_SINGLE([cov],[c],[Covariates RDS (model specification)],[/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/wave1_modelE_covariates_5087_20180924.rds])
+# ARG_OPTIONAL_SINGLE([cov],[c],[Covariates RDS (model specification)],[/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/wave1_modelE_covariates_5087_20181127.rds])
 # ARG_OPTIONAL_SINGLE([sentrix],[s],[Sentrix ID linker],[/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/sentrix.rds])
 # ARG_OPTIONAL_SINGLE([mvals],[m],[Mvalues chromosome file pattern],[/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/chr/mvalues.chr%.rds])
 # ARG_OPTIONAL_SINGLE([pca],[e],[PCA file],[/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/Factominer_PCs_5087_resid_PC100.rds])
@@ -43,7 +43,7 @@ begins_with_short_option()
 # THE DEFAULTS INITIALIZATION - OPTIONALS
 _arg_pdata=
 _arg_pheno=
-_arg_cov="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/wave1_modelE_covariates_5087_20180924.rds"
+_arg_cov="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/wave1_modelE_covariates_5087_20181127.rds"
 _arg_sentrix="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/sentrix.rds"
 _arg_mvals="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/chr/mvalues.chr%.rds"
 _arg_pca="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/Factominer_PCs_5087_resid_PC100.rds"
