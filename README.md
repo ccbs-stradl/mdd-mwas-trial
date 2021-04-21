@@ -6,6 +6,7 @@ Scripts to perform MWAS on cohort data.
 **INSTRUCTIONS**
 
 **DEFAULT FILES AND ARGUMENTS**
+
 The following arguments in the pipeline are default. You will need to change the script to reflect the paths to these files. 
 
 FILE: **mdd_mwas**
