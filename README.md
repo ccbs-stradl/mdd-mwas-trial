@@ -61,9 +61,11 @@ Lines: 6:8, 14; 44:46, 52; 58:60, 66 (DO NOT change anything in the main script;
 **PIPELINE FORMAT**
 
 1. First, add your local path to your .bash_profile
+
 PATH=$PATH: /path/to/local/bin
 
 2. Update your path with the shell command:
+
 source ~/.bash_profile
 
 3. Load R; PLEASE NOTE: the pipeline runs with R version 3.3.2, therefore all .rds files should be saved in this version
