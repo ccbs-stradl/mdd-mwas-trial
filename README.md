@@ -12,7 +12,7 @@ The following arguments in the pipeline are default. You will need to change the
 FILE: **mdd_mwas**
 Lines: 8-13; 46-51; 60-65
 
-**Paths to change:**
+**Paths to change:** all paths to change are noted as "/path/to/[respective path]" in **mdd_mwas**. 
 
 1. Covariates: RDS FILE; there is a default covariate file, although you can override this with an argument in the pipeline while you run MWAS (e.g. --cov /path/to/covariate_file). It is good to have a base covariate file with e.g. cohort IDs, age, and sex, in the pipeline script.
      **FORMAT:** the covariate file should have "id" for cohort ID and covariates to include in MWAS (any name)
@@ -31,6 +31,13 @@ Lines: 8-13; 46-51; 60-65
 6. Probes to exclude: TEXT FILE;  this should point to a file containing a list of CpG sites (no header) that are cross-hybridising or polymorphic. This will remove these CpGs prior to running MWAS. If you wish to retain these CpGs, supply an empty file here.
       **FORMAT:** textfile containing a list of CpGs to remove (ho header)
 
+
+**Input files**
+
+The following arguments in the pipeline are free text input. You will need input the paths and file names for these based on the phenotype and covariate files you are analysing.
+
+FILE: **mdd_mwas**
+Lines: 6:8, 14; 44:46, 52; 58:60, 66 (DO NOT change anything in the main script; this is just for information purposes)
 
 TEMPLATE.R has the token \____TRAIT\___ which should be replaced by the trait to be analysed
 
