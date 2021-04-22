@@ -12,8 +12,4 @@ script_dir=$(dirname $0)
 
 module load igmm/apps/R/3.4.1
 
-Rscript $script_dir/ewas.R $*
-
-#F_MVALS="ForAna_GRM_corrected_Mvalues.rds"
-#F_PCA="Konrad_Corrected_resid_mvals_relateds_PCA_301017.rds"
-#F_PROBES="SNP_CH_probes"
+Rscript $script_dir/mdd_mwas.R $*
