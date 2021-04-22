@@ -40,7 +40,7 @@ Lines: 8-13; 46-51; 60-65
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-**Input files**
+**INPUT FILES**
 
 The following arguments in the pipeline are free text input. You will need input the paths and file names for these based on the phenotype and covariate files you are analysing.
 
