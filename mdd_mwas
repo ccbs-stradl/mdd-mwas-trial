@@ -5,12 +5,12 @@
 #
 # ARG_OPTIONAL_SINGLE([pdata],[d],[Input phenotypes csv file])
 # ARG_OPTIONAL_SINGLE([pheno],[p],[Name of phenotype])
-# ARG_OPTIONAL_SINGLE([cov],[c],[Covariates RDS (model specification)],[/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/wave1_modelE_covariates_5087_20181127.rds])
-# ARG_OPTIONAL_SINGLE([sentrix],[s],[Sentrix ID linker],[/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/sentrix.rds])
-# ARG_OPTIONAL_SINGLE([mvals],[m],[Mvalues chromosome file pattern],[/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/chr/mvalues.chr%.rds])
-# ARG_OPTIONAL_SINGLE([pca],[e],[PCA file],[/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/Factominer_PCs_5087_resid_PC100.rds])
+# ARG_OPTIONAL_SINGLE([cov],[c],[Covariates RDS (model specification)],[/path/to/covariate-file.rds])
+# ARG_OPTIONAL_SINGLE([sentrix],[s],[Sentrix ID linker],[/path/to/linker-file.rds])
+# ARG_OPTIONAL_SINGLE([mvals],[m],[Mvalues chromosome file pattern],[/path/to/mvalue-files/mvalues.chr%.rds])
+# ARG_OPTIONAL_SINGLE([pca],[e],[PCA file],[/path/to/principal-components-file.rds])
 # ARG_OPTIONAL_BOOLEAN([prune],[],[Prune probes with missing samples],[on])
-# ARG_OPTIONAL_SINGLE([exclude],[x],[Probes to exclude],[/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/SNP_CH_probes])
+# ARG_OPTIONAL_SINGLE([exclude],[x],[Probes to exclude],[/path/to/probes-to-exclude-file.txt])
 # ARG_OPTIONAL_SINGLE([out],[o],[Output prefix])
 # ARG_VERSION([echo test v$version])
 # ARG_HELP([The general script's help msg])
@@ -43,12 +43,12 @@ begins_with_short_option()
 # THE DEFAULTS INITIALIZATION - OPTIONALS
 _arg_pdata=
 _arg_pheno=
-_arg_cov="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/wave1_modelE_covariates_5087_20181127.rds"
-_arg_sentrix="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/sentrix.rds"
-_arg_mvals="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/chr/mvalues.chr%.rds"
-_arg_pca="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/Factominer_PCs_5087_resid_PC100.rds"
+_arg_cov="/path/to/covariate-file.rds"
+_arg_sentrix="/path/to/linker-file.rds"
+_arg_mvals="/path/to/mvalue-files/mvalues.chr%.rds"
+_arg_pca="/path/to/principal-components-file.rds"
 _arg_prune="on"
-_arg_exclude="/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/SNP_CH_probes"
+_arg_exclude="/path/to/probes-to-exclude-file.txt"
 _arg_out=
 
 print_help ()
@@ -57,12 +57,12 @@ print_help ()
 	printf 'Usage: %s [-d|--pdata <arg>] [-p|--pheno <arg>] [-c|--cov <arg>] [-s|--sentrix <arg>] [-m|--mvals <arg>] [-e|--pca <arg>] [--(no-)prune] [-x|--exclude <arg>] [-o|--out <arg>] [-v|--version] [-h|--help]\n' "$0"
 	printf '\t%s\n' "-d,--pdata: Input phenotypes csv file (no default)"
 	printf '\t%s\n' "-p,--pheno: Name of phenotype (no default)"
-	printf '\t%s\n' "-c,--cov: Covariates RDS (model specification) (default: '/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/wave1_modelE_covariates_5087_20180924.rds')"
-	printf '\t%s\n' "-s,--sentrix: Sentrix ID linker (default: '/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/sentrix.rds')"
-	printf '\t%s\n' "-m,--mvals: Mvalues chromosome file pattern (default: '/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/chr/mvalues.chr%.rds')"
-	printf '\t%s\n' "-e,--pca: PCA file (default: '/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/Factominer_PCs_5087_resid_PC100.rds')"
+	printf '\t%s\n' "-c,--cov: Covariates RDS (model specification) (default: '/path/to/covariate-file.rds')"
+	printf '\t%s\n' "-s,--sentrix: Sentrix ID linker (default: '/path/to/linker-file.rds')"
+	printf '\t%s\n' "-m,--mvals: Mvalues chromosome file pattern (default: '/path/to/mvalue-files/mvalues.chr%.rds')"
+	printf '\t%s\n' "-e,--pca: PCA file (default: '/path/to/principal-components-file.rds')"
 	printf '\t%s\n' "--prune,--no-prune: Prune probes with missing samples (on by default)"
-	printf '\t%s\n' "-x,--exclude: Probes to exclude (default: '/exports/igmm/eddie/GenScotDepression/data/genscot/methylation/STRADL/Mvalues/SNP_CH_probes')"
+	printf '\t%s\n' "-x,--exclude: Probes to exclude (default: '/path/to/probes-to-exclude-file.txt')"
 	printf '\t%s\n' "-o,--out: Output prefix (no default)"
 	printf '\t%s\n' "-v,--version: Prints version"
 	printf '\t%s\n' "-h,--help: Prints help"
