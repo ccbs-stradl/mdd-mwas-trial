@@ -30,7 +30,7 @@ Lines: 8-13; 46-51; 60-65
      
 4. PCA file: RDS FILE; this should be a path to a file containing 20 principal components calculated for the dataset. *If PCs have already been accounted for during DNAm pre-processing, please let us know and we will provide a modified pipeline that does not take PCs into account*.
      
-     **Format:** PCA file should contain a column with DNAm IDs and first 20 principal components, named "PC 1:20"
+     **FORMAT:** PCA file should contain a column with DNAm IDs and first 20 principal components, named "PC 1:20"
      
 5. Prune pipeline argument: the default for pruning probes with missing samples; this can be changed to "--no-prune", which will retain probes with missing samples.
 
@@ -49,11 +49,11 @@ Lines: 6:8, 14; 44:46, 52; 58:60, 66 (DO NOT change anything in the main script;
 
 1. Phenotype file: .csv format
        
-       **Format:** .csv file containing cohort ID ("id"), as well as a list of phenotypes to analyse (the script will take one phenotype at a time)
+      **Format:** .csv file containing cohort ID ("id"), as well as a list of phenotypes to analyse (the script will take one phenotype at a time)
 2. "pheno" argument: the main phenotype to analyse in "Phenotype file"
 3. Covariate file: pleasre refer to point 1 above in "Default files and arguments"
        
-       **FORMAT:** the covariate file should have "id" for cohort ID and covariates to include in MWAS (any name)
+      **FORMAT:** the covariate file should have "id" for cohort ID and covariates to include in MWAS (any name)
 4. "Out": specifies the location where MWAS results and analysis log file will be output to
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
