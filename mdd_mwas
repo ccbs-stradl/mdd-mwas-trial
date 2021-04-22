@@ -311,9 +311,9 @@ if [ "$flag_error" = true ]; then
         exit
 fi
 
-job_name=ewas_$(basename $_arg_pdata .csv)_$_arg_pheno
+job_name=mwas_$(basename $_arg_pdata .csv)_$_arg_pheno
 
-qsub -N $job_name $script_dir/ewas_chr.sh --pdata $_arg_pdata --pheno $_arg_pheno --out $_arg_out --cov $_arg_cov --sentrix $_arg_sentrix --mvals $_arg_mvals --pca $_arg_pca $prune_flag --exclude $_arg_exclude 
+qsub -N $job_name $script_dir/mdd_mwas.sh --pdata $_arg_pdata --pheno $_arg_pheno --out $_arg_out --cov $_arg_cov --sentrix $_arg_sentrix --mvals $_arg_mvals --pca $_arg_pca $prune_flag --exclude $_arg_exclude 
 
 
 # ] <-- needed because of Argbash
