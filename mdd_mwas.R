@@ -85,7 +85,7 @@ rename_file <- function(file) {
 log_file <- paste0(out, ".log")
 logging <- function(str) { cat(paste0(paste0(str, collapse=''), '\n'), file=log_file, append=TRUE) }
  
-logging('STRADL EWAS')
+logging('MDD MWAS')
 
 logging(c("Started: ", date()))
 
@@ -100,7 +100,7 @@ logging('')
 logging(c('Job ID: ', Sys.getenv('JOB_ID')))
 logging(c('Job standard error file: ', Sys.getenv('SGE_STDERR_PATH')))
 logging(c('Job standard out file: ', Sys.getenv('SGE_STDOUT_PATH')))
-logging(c('EWAS script file: ', script_path))
+logging(c('MWAS script file: ', script_path))
 logging('')
 
 ############################################################
@@ -159,10 +159,10 @@ if(!is.null(F_PROBES)) {
 logging(c('Probes excluded: ', nrow(probes_to_exclude)))
 
 
-ewas <- function(chr) {
+mwas <- function(chr) {
 
 
-  cat(paste('EWAS for chromosome', chr, '\n'))
+  cat(paste('MWAS for chromosome', chr, '\n'))
   # get path for this chromosome's mvalues 
   F_MVALS=gsub('%', chr, opt$mvals)
 
@@ -215,7 +215,7 @@ ewas <- function(chr) {
   if(chr == 1) {
           logging(c('Model: ', model_formula))
           logging(c('Design matrix: ', paste('~', paste(dimnames(design_20)[[2]], collapse=' + '))))
-          logging(c('EWAS sample size: ', nrow(design_20)))
+          logging(c('MWAS sample size: ', nrow(design_20)))
   }
 
   
@@ -238,12 +238,12 @@ ewas <- function(chr) {
 
  
 
-cat(paste(date(), 'Starting EWAS', '\n'))
+cat(paste(date(), 'Starting MWAS', '\n'))
 # load model fits from each chromosome
-fits_chr <- lapply(1:22, ewas)
+fits_chr <- lapply(1:22, mwas)
 
 # merge into a single MArrayLM
-cat(paste(date(), 'Merging EWAS', '\n'))
+cat(paste(date(), 'Merging MWAS', '\n'))
 names(fits_chr[[1]])
 
 fits <- 
@@ -270,7 +270,7 @@ TT <- topTable(efit, coef=2, adjust='fdr', number=length(fits$Amean))
 
 TT$ID<-rownames(TT)
 
-logging(c('EWAS probes: ', nrow(TT)))
+logging(c('MWAS probes: ', nrow(TT)))
 
 # Merge the annotation data
 anno <- getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
