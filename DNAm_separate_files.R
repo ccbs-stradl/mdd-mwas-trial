@@ -20,8 +20,8 @@ option_list <- list(
 args = commandArgs(trailingOnly=TRUE)
 opt <- parse_args(OptionParser(option_list=option_list), args=args)
 
-meth.data = opt$methdata
-annot.file = opt$annotfile
+methyl.data = opt$methdata
+annotat.file = opt$annotfile
 # Create an output directory in the current file location to store DNAm data
 dir.create("./out")
 
