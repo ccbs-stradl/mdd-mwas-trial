@@ -27,9 +27,9 @@ dir.create("./out")
 
 # Load data into R ---------------------------------------------------------------
 # DNA methylation data
-meth.data <- readRDS(meth.data)
+meth.data <- readRDS(methyl.data)
 # Annotation file
-annot.file <- readRDS(annot.file)
+annot.file <- readRDS(annotat.file)
 
 # Pre-process the annotation file ---------------------------------------------------------------
 # Separate the file "annot.file" into separate chromosome files
