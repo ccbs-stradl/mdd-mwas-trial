@@ -20,25 +20,25 @@ option_list <- list(
 args = commandArgs(trailingOnly=TRUE)
 opt <- parse_args(OptionParser(option_list=option_list), args=args)
 
-methyl.data = opt$methdata
-annotat.file = opt$annotfile
+meth.data = opt$methdata
+annot.file = opt$annotfile
 # Create an output directory in the current file location to store DNAm data
 dir.create("./out")
 
 # Load data into R ---------------------------------------------------------------
 # DNA methylation data
-meth.data <- readRDS(methyl.data)
+methyl.data <- readRDS(methyl.data)
 # Annotation file
-annot.file <- readRDS(annotat.file)
+annotat.file <- readRDS(annotat.file)
 
 # Pre-process the annotation file ---------------------------------------------------------------
 # Separate the file "annot.file" into separate chromosome files
-list.df <- split(annot.file, annot.file$chr) # split the dataset into a list of datasets based on ann$chr
-list.df=as.data.frame(list.df) # turn to dataframe
+list.df <- as.data.frame(annot.file) # turn to dataframe
+list.chrom <- split(list.df, list.df$chr) # split the dataset into a list of datasets based on ann$chr
 
-# Reduce dataframe to only chr number and CpG site and covnert to list separated by chromosome
-list.chrom = list.df %>% group_by(chr) %>% select(chr,Name)
-list.chrom <- split(list.chrom, list.chrom$chr)
+# Remove unneccessary data ---------------------------------------------------------------
+rm(annot.file)
+rm(list.df)
 
 # Subset ---------------------------------------------------------------
 # Take DNAm file, and subset CpGs based on those corresponding to different chromosomes in list_df
