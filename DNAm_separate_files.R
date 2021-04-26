@@ -1,6 +1,6 @@
 ## Separate DNA methylation data into chromosome-separate files
 # Miruna Carmen Barbu - 23/04/2021
-# For more information on the script and files included, please read the README.txt file
+# For more information on the script and files included, please read the 'README DNAm separate files.txt' file
 
 # Information on file formats ----------------------------------------------------------
 # Included with script: EPIC and 450K array annotation files
