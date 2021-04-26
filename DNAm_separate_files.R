@@ -20,16 +20,16 @@ option_list <- list(
 args = commandArgs(trailingOnly=TRUE)
 opt <- parse_args(OptionParser(option_list=option_list), args=args)
 
-meth.data = opt$methdata
-annot.file = opt$annotfile
+methyl.data = opt$methdata
+annotat.file = opt$annotfile
 # Create an output directory in the current file location to store DNAm data
 dir.create("./out")
 
 # Load data into R ---------------------------------------------------------------
 # DNA methylation data
-methyl.data <- readRDS(methyl.data)
+meth.data <- readRDS(methyl.data)
 # Annotation file
-annotat.file <- readRDS(annotat.file)
+annot.file <- readRDS(annotat.file)
 
 # Pre-process the annotation file ---------------------------------------------------------------
 # Separate the file "annot.file" into separate chromosome files
